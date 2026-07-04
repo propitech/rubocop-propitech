@@ -1,0 +1,33 @@
+AllCops:
+  NewCops: enable
+  TargetRubyVersion: 3.3
+  SuggestExtensions: false
+
+Style/StringLiterals:
+  EnforcedStyle: double_quotes
+
+Style/StringLiteralsInInterpolation:
+  EnforcedStyle: double_quotes
+
+# Documentation lives in the cop's own YARD comment and the README, not a
+# redundant top-level comment on every module.
+Style/Documentation:
+  Enabled: false
+
+Metrics/BlockLength:
+  Exclude:
+    - 'spec/**/*'
+    - '*.gemspec'
+
+Metrics/MethodLength:
+  Exclude:
+    - 'spec/**/*'
+
+Gemspec/DevelopmentDependencies:
+  Enabled: false
+
+# The gem entry point is conventionally named after the gem (with a dash),
+# which RuboCop's snake_case rule cannot express.
+Naming/FileName:
+  Exclude:
+    - 'lib/rubocop-propitech.rb'

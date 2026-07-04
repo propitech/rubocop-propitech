@@ -1,0 +1,6 @@
+Propitech/NoViewAssembly:
+  Description: 'Keep data or object assembly out of view templates; consume controller-assigned objects and helpers instead.'
+  Enabled: true
+  VersionAdded: '0.1.0'
+  Include:
+    - 'app/views/**/*'
