@@ -4,3 +4,11 @@ Propitech/NoViewAssembly:
   VersionAdded: '0.1.0'
   Include:
     - 'app/views/**/*'
+
+Propitech/SeedUsesFactory:
+  Description: 'Build seed data with FactoryBot factories and traits; no hand-rolled model create, no command invocation.'
+  Enabled: true
+  VersionAdded: '0.2.0'
+  Include:
+    - 'db/seeds.rb'
+    - 'db/seeds/**/*.rb'
