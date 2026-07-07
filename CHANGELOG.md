@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+## [0.2.0]
+
+- Add `Propitech/SeedUsesFactory`: enforce that seed data is built with
+  FactoryBot factories and traits. Flags a hand-rolled model create (a constant
+  receiver `.create` / `.create!`, allowing `FactoryBot.create` /
+  `FactoryGirl.create`) and a `Commands::…` business-logic command invocation,
+  scoped to `db/seeds.rb` and `db/seeds/**/*.rb`.
+
 ## [0.1.0]
 
 - Initial release.
