@@ -5,7 +5,6 @@ require "lint_roller"
 
 require_relative "version"
 require_relative "../cop/propitech/no_view_assembly"
-require_relative "../cop/propitech/seed_uses_factory"
 
 module RuboCop
   module Propitech

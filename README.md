@@ -34,31 +34,11 @@ flagged.
 <%= link_to t(".prev"), some_path(on: @cursor) %>
 ```
 
-### `Propitech/SeedUsesFactory`
-
-Enforces that seed data is built with FactoryBot factories and their traits. A
-factory is the only sanctioned way to build a seed row: the trait is the shared
-vocabulary between seeds and specs, so seed rows and test rows exercise the same
-code and never drift.
-
-Two constructs are flagged inside a seed file: a hand-rolled model create (a
-constant receiver `.create` / `.create!` — `FactoryBot.create` /
-`FactoryGirl.create` are allowed, and `find_or_create_by` / `create_with` pass
-untouched), and a `Commands::…` business-logic command invocation (a command
-runs operation side-effects a seed must not depend on).
-
-```ruby
-# bad
-Space.create!(name: "Studio A")
-Commands::Spaces::Create.call(name: "Studio A")
-
-# good
-FactoryBot.create(:space, :studio, name: "Studio A")
-```
-
-Scoped to `db/seeds.rb` and `db/seeds/**/*.rb`, so it stays inert over the rest
-of the tree. Unlike `NoViewAssembly`, this cop lints plain Ruby, so a plain
-`rubocop` run enforces it.
+> **Seed cops moved.** `Propitech/SeedUsesFactory` and its companion
+> `Propitech/SeedUsesContainer` now ship in the
+> [`business_logic`](https://github.com/propitech/business_logic) gem. Enable
+> them with `plugins: [business_logic]`. `rubocop-propitech` keeps the
+> view-layer cop only.
 
 ## Installation
 
