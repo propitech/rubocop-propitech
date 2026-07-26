@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+- Raise `required_ruby_version` to `>= 3.4`. CI now runs a single Ruby 3.4 job
+  on the self-hosted fleet, whose runner image carries 3.4.9, so support for
+  3.3 is no longer verified and the gemspec no longer claims it.
+
 ## [0.3.0]
 
 - Remove `Propitech/SeedUsesFactory`. The cop now ships in the `business_logic`
