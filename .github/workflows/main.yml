@@ -13,30 +13,51 @@ concurrency:
 
 jobs:
   build:
-    # Routed by the repo variable RUNNER_LABELS, the same contract every other
-    # Propitech repo uses. A hardcoded ubuntu-latest is refused at dispatch once
-    # the org's hosted-minute allowance is spent, and even before that GitHub
-    # bills a one-minute minimum per job, so a short job costs far more in
-    # rounding than in compute (SQH-1418).
-    runs-on: ${{ vars.RUNNER_LABELS != '' && fromJSON(vars.RUNNER_LABELS) || 'ubuntu-latest' }}
+    # GitHub-hosted, hardcoded, and deliberately outside the RUNNER_LABELS
+    # routing contract every private Propitech repository uses (SQH-1418).
+    # This repository is public, and that changes the answer twice over.
+    #
+    # It cannot reach the fleet. Every organisation runner group is configured
+    # with allows_public_repositories = false, so a job from a public repository
+    # is refused a self-hosted runner and waits for one that never arrives.
+    #
+    # It must not reach the fleet. A public repository accepts pull requests from
+    # any fork, and a fork's diff owns the Gemfile and the Rakefile this job
+    # runs — which on a self-hosted runner is arbitrary code execution on shared,
+    # persistent infrastructure. That is why GitHub advises against pairing the
+    # two at all. Requiring approval for external contributors narrows the
+    # window; it does not close it.
+    #
+    # The cost argument that moved the private repositories off hosted runners
+    # does not reach here either: standard hosted runners are free for public
+    # repositories, so there are no minutes to spend.
+    runs-on: ubuntu-latest
     name: Ruby 3.4
-    # ruby/setup-ruby refuses to install on a self-hosted runner: it reports the
-    # platform as self-hosted and tells the caller to populate RUNNER_TOOL_CACHE
-    # itself. Ruby therefore comes from the fleet's runner image, which carries
-    # 3.4.9. The digest is the one medusa's ruby-rails-ci.yml defaults to; bump
-    # them together.
-    container:
-      image: ghcr.io/propitech/runner-rails-8.1@sha256:df8bd45f9df37a79d7df7dfc7425c14a9ecadcaa4ec071776e0ddff4303e098a
-    env:
-      # The image ships gems under a root-owned system path; the runner uid
-      # cannot write there, so keep the bundle inside the workspace.
-      BUNDLE_PATH: vendor/bundle
+    # Ruby comes from ruby/setup-ruby rather than from the fleet's runner image.
+    # That image is a private package, and a public repository's hosted runner
+    # has no credential to pull it — nor should a fork's pull request run be
+    # handed one.
+    # Third-party actions are pinned to a commit SHA rather than to a moving
+    # tag. A tag is mutable: whoever controls the action's repository can
+    # repoint it, and every workflow that names it then runs different code
+    # without a diff here. That is worth guarding anywhere, and it is worth
+    # guarding here in particular, because this repository is public and its
+    # CI is now the one place an outside pull request reaches. The trailing
+    # comment is the release each SHA belongs to, so the pin stays readable;
+    # bump both together.
+    #
+    # Resolve the SHA from the tag itself when pinning — for ruby/setup-ruby,
+    # `v1` is a branch rather than a tag, so `git/ref/heads/v1` is what answers.
+    # Listing tags and taking the last match sorts them as strings, which puts
+    # v1.99.0 after v1.321.0 and silently pins a release from 2022.
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           persist-credentials: false
-      - name: Install gems
-        run: bundle install --jobs 4 --retry 3
+      - uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1.321.0
+        with:
+          ruby-version: "3.4"
+          bundler-cache: true
       - name: Run the default task (rubocop + rspec)
         env:
           CI: true
