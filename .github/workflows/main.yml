@@ -37,11 +37,19 @@ jobs:
     # That image is a private package, and a public repository's hosted runner
     # has no credential to pull it — nor should a fork's pull request run be
     # handed one.
+    # Third-party actions are pinned to a commit SHA rather than to a moving
+    # tag. A tag is mutable: whoever controls the action's repository can
+    # repoint it, and every workflow that names it then runs different code
+    # without a diff here. That is worth guarding anywhere, and it is worth
+    # guarding here in particular, because this repository is public and its
+    # CI is now the one place an outside pull request reaches. The trailing
+    # comment is the release each SHA belongs to, so the pin stays readable;
+    # bump both together.
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           persist-credentials: false
-      - uses: ruby/setup-ruby@v1
+      - uses: ruby/setup-ruby@e5517072e87f198d9533967ae13d97c11b604005 # v1.99.0
         with:
           ruby-version: "3.4"
           bundler-cache: true
