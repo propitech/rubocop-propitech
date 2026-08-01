@@ -13,30 +13,38 @@ concurrency:
 
 jobs:
   build:
-    # Routed by the repo variable RUNNER_LABELS, the same contract every other
-    # Propitech repo uses. A hardcoded ubuntu-latest is refused at dispatch once
-    # the org's hosted-minute allowance is spent, and even before that GitHub
-    # bills a one-minute minimum per job, so a short job costs far more in
-    # rounding than in compute (SQH-1418).
-    runs-on: ${{ vars.RUNNER_LABELS != '' && fromJSON(vars.RUNNER_LABELS) || 'ubuntu-latest' }}
+    # GitHub-hosted, hardcoded, and deliberately outside the RUNNER_LABELS
+    # routing contract every private Propitech repository uses (SQH-1418).
+    # This repository is public, and that changes the answer twice over.
+    #
+    # It cannot reach the fleet. Every organisation runner group is configured
+    # with allows_public_repositories = false, so a job from a public repository
+    # is refused a self-hosted runner and waits for one that never arrives.
+    #
+    # It must not reach the fleet. A public repository accepts pull requests from
+    # any fork, and a fork's diff owns the Gemfile and the Rakefile this job
+    # runs — which on a self-hosted runner is arbitrary code execution on shared,
+    # persistent infrastructure. That is why GitHub advises against pairing the
+    # two at all. Requiring approval for external contributors narrows the
+    # window; it does not close it.
+    #
+    # The cost argument that moved the private repositories off hosted runners
+    # does not reach here either: standard hosted runners are free for public
+    # repositories, so there are no minutes to spend.
+    runs-on: ubuntu-latest
     name: Ruby 3.4
-    # ruby/setup-ruby refuses to install on a self-hosted runner: it reports the
-    # platform as self-hosted and tells the caller to populate RUNNER_TOOL_CACHE
-    # itself. Ruby therefore comes from the fleet's runner image, which carries
-    # 3.4.9. The digest is the one medusa's ruby-rails-ci.yml defaults to; bump
-    # them together.
-    container:
-      image: ghcr.io/propitech/runner-rails-8.1@sha256:df8bd45f9df37a79d7df7dfc7425c14a9ecadcaa4ec071776e0ddff4303e098a
-    env:
-      # The image ships gems under a root-owned system path; the runner uid
-      # cannot write there, so keep the bundle inside the workspace.
-      BUNDLE_PATH: vendor/bundle
+    # Ruby comes from ruby/setup-ruby rather than from the fleet's runner image.
+    # That image is a private package, and a public repository's hosted runner
+    # has no credential to pull it — nor should a fork's pull request run be
+    # handed one.
     steps:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - name: Install gems
-        run: bundle install --jobs 4 --retry 3
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+          bundler-cache: true
       - name: Run the default task (rubocop + rspec)
         env:
           CI: true
