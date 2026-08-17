@@ -14,8 +14,8 @@ concurrency:
 jobs:
   build:
     # GitHub-hosted, hardcoded, and deliberately outside the RUNNER_LABELS
-    # routing contract every private Propitech repository uses (SQH-1418).
-    # This repository is public, and that changes the answer twice over.
+    # routing contract every private Propitech repository uses. This
+    # repository is public, and that changes the answer twice over.
     #
     # It cannot reach the fleet. Every organisation runner group is configured
     # with allows_public_repositories = false, so a job from a public repository
