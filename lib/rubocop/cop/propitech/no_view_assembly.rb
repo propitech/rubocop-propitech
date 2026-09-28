@@ -3,24 +3,7 @@
 module RuboCop
   module Cop
     module Propitech
-      # Flags data or object assembly inside a view template. A view consumes
-      # values an earlier layer already produced (controller-assigned instance
-      # variables, helpers, ViewComponents, route and i18n helpers, Design
-      # tokens); it must not instantiate a domain, query, or presenter object,
-      # run an ActiveRecord query, or build a lambda inline.
-      #
-      # Two kinds of instantiation are view-rendering machinery, not data
-      # assembly, so they are allowed: a ViewComponent render target and a
-      # +simple_form+ backing object. Any constant whose name ends in
-      # +Component+ or +Form+ is therefore permitted (the latter also covers the
-      # idiomatic blank form built to render a dynamic nested-row template).
-      #
-      # This cop is meant to run only over +app/views/**+ (scope it with
-      # +Include+, as the shipped default does), reached through erb_lint's
-      # +Rubocop+ linter so it lints the Ruby in ERB scriptlets. Plain +rubocop+
-      # never enumerates +.erb+ files, so the cop is inert on the rest of the
-      # tree.
-      #
+      # Flags data or object assembly inside a view template.
       # @example
       #   # bad
       #   <% label = SpaceLabel.new(space).to_s %>
@@ -53,9 +36,6 @@ module RuboCop
 
         def on_block(node)
           return unless node.lambda? || %i[lambda proc].include?(node.method_name)
-          # Only a lambda captured in a local is the smell (a closure the view
-          # keeps to reuse). An inline callback argument, e.g. simple_form's
-          # label_method or a component's page_url, is legitimate.
           return unless node.parent&.lvasgn_type?
 
           add_offense(node, message: MSG_LAMBDA)

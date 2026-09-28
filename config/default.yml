@@ -4,3 +4,10 @@ Propitech/NoViewAssembly:
   VersionAdded: '0.1.0'
   Include:
     - 'app/views/**/*'
+
+Propitech/CommentBudget:
+  Description: 'Cap a comment run at MaxClassProseLines above a class or module, MaxProseLines elsewhere; a directive or a YARDoc usage block stays exempt.'
+  Enabled: false
+  VersionAdded: '0.4.0'
+  MaxProseLines: 2
+  MaxClassProseLines: 1

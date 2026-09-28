@@ -4,13 +4,12 @@ require "pathname"
 require "lint_roller"
 
 require_relative "version"
+require_relative "../cop/propitech/comment_budget"
 require_relative "../cop/propitech/no_view_assembly"
 
 module RuboCop
   module Propitech
     # LintRoller plugin registering Propitech's cross-cutting Rails cops.
-    # Consuming repos enable it with `plugins: [rubocop-propitech]` in their
-    # `.rubocop.yml`; the cop config ships in `config/default.yml`.
     class Plugin < LintRoller::Plugin
       def about
         @about ||= LintRoller::About.new(
