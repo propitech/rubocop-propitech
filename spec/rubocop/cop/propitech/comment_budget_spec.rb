@@ -22,6 +22,46 @@ RSpec.describe RuboCop::Cop::Propitech::CommentBudget, :config do
     RUBY
   end
 
+  it "passes a full annotaterb schema block naming every section above a class definition" do
+    expect_no_offenses(<<~RUBY)
+      # == Schema Information
+      # Schema version: 2026_09_01_000000
+      #
+      # Table name: terms
+      #
+      # Database name: primary
+      #
+      #  id        :bigint           not null, primary key
+      #  starts_on :date             not null
+      #
+      # Indexes
+      #
+      #  index_terms_on_starts_on  (starts_on)
+      #
+      # Foreign Keys
+      #
+      #  fk_rails_...  (school_id => schools.id)
+      #
+      # Check Constraints
+      #
+      #  terms_ends_after_starts  (ends_on > starts_on)
+      #
+      # Unique Constraints
+      #
+      #  terms_uuid_unique  (uuid)
+      #
+      # Exclusion Constraints
+      #
+      #  terms_no_overlap_per_school  (school_id WITH =, daterange(starts_on, ends_on) WITH &&)
+      #
+      # Enums
+      #
+      #  status  ("draft" or "published")
+      #
+      class Term; end
+    RUBY
+  end
+
   it "passes two lines each carrying a rubocop or a brakeman marker" do
     expect_no_offenses(<<~RUBY)
       # rubocop:disable Metrics/AbcSize
@@ -204,9 +244,20 @@ RSpec.describe RuboCop::Cop::Propitech::CommentBudget, :config do
 
   it "passes three lines each carrying a reek marker" do
     expect_no_offenses(<<~RUBY)
-      # reek:TooManyMethods
-      # reek:FeatureEnvy { enabled: false }
-      # reek:UtilityFunction
+      # :reek:TooManyMethods
+      # :reek:FeatureEnvy { enabled: false }
+      # :reek:UtilityFunction
+      def foo; end
+    RUBY
+  end
+
+  it "reports a three-line prose run where each line mentions a rubocop, reek or brakeman marker mid-sentence" do
+    line1 = "# We keep this because rubocop: flags the alternative pattern here"
+    expect_offense(<<~RUBY)
+      #{line1}
+      #{"^" * line1.length} #{described_class::MSG}
+      # We also note that reek: complains about the very same shape too
+      # And brakeman: raises a similar warning against this construct
       def foo; end
     RUBY
   end
@@ -241,6 +292,18 @@ RSpec.describe RuboCop::Cop::Propitech::CommentBudget, :config do
       #
       #  id     :bigint           not null, primary key
       #  amount :integer          not null
+      class Refund; end
+    RUBY
+  end
+
+  it "reports a prose line placed directly under a schema information block above a class definition" do
+    line1 = "# == Schema Information"
+    expect_offense(<<~RUBY)
+      #{line1}
+      #{"^" * line1.length} #{described_class::MSG}
+      #
+      #  id :bigint           not null, primary key
+      # This column keeps a paranoia timestamp for the soft-delete gem.
       class Refund; end
     RUBY
   end

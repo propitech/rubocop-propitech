@@ -57,7 +57,9 @@ tag lines from YARD's standard set (`@param`, `@return`, `@raise`, `@yield`,
 `@attr`, `@attr_reader`, `@attr_writer`, `@abstract`, `@option`, `@note`,
 `@overload`, `@private`, `@todo`, `@since`, `@author`, `@version`), an
 indented continuation under any tag, or a bare `#` line anywhere in the
-block. A trailing comment on a code line (`foo # bar`) never joins a run,
+block. A continuation under a tag carries no line cap of its own, by design:
+the tag it continues is what marks the run as a YARDoc usage block. A
+trailing comment on a code line (`foo # bar`) never joins a run,
 and a `=begin`/`=end` block comment is outside the cop's scope. Ships
 disabled by default; enable it once a repository's comment sweep is done.
 

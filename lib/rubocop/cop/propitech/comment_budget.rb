@@ -21,7 +21,11 @@ module RuboCop
               "(AGENTS.md#code-style)."
 
         SCHEMA_HEADER = /\A#\s*==\s*Schema Information\b/
-        MARKER = /\b(?:rubocop|reek|brakeman):/
+        SCHEMA_SECTION = /\A\#\s*(?:Table\ name:|Database\ name:|Schema\ version:|Indexes\b|
+                                   Foreign\ Keys\b|Check\ Constraints\b|Unique\ Constraints\b|
+                                   Exclusion\ Constraints\b|Enums\b)/x
+        SCHEMA_DETAIL = /\A#\s{2,}\S/
+        MARKER = /\A#\s*:?(?:rubocop|reek|brakeman):/
         TAG = /\A@(?:yieldparam|yieldreturn|yield|param|return|raise|example|see|deprecated|api|
                     attr_reader|attr_writer|attr|abstract|option|note|overload|private|todo|
                     since|author|version)\b/x
@@ -68,9 +72,12 @@ module RuboCop
 
         def directive_run?(run)
           header_index = run.index { |comment| comment.text.match?(SCHEMA_HEADER) }
-          prefix = header_index ? run[0...header_index] : run
+          return run.all? { |comment| directive_line?(comment) } unless header_index
 
-          prefix.all? { |comment| directive_line?(comment) }
+          schema_block = run[header_index..].take_while { |comment| schema_line?(comment) }
+          return false unless schema_block.size == run.size - header_index
+
+          run[0...header_index].all? { |comment| directive_line?(comment) }
         end
 
         def directive_line?(comment)
@@ -79,6 +86,12 @@ module RuboCop
 
         def shebang?(comment)
           comment.loc.line == 1 && comment.text.start_with?("#!")
+        end
+
+        def schema_line?(comment)
+          text = comment.text
+          text.match?(SCHEMA_HEADER) || text.match?(SCHEMA_SECTION) || text.match?(SCHEMA_DETAIL) ||
+            text.match?(/\A#\s*\z/)
         end
 
         def yardoc_run?(run)
