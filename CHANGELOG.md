@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+## [0.5.0]
+
+- `Propitech/CommentBudget` caps each full-line comment at
+  `MaxCommentLineLength` characters (default 100), counted from the `#` with
+  leading indentation excluded. A run budget counts lines, so a paragraph
+  squeezed onto one long line used to pass it; each over-long line is now
+  reported at its own position, separately from the run budget. A directive
+  line (a magic comment, a shebang, an `annotaterb` schema line, a `rubocop:`,
+  `reek:` or `brakeman:` marker) and a line holding a single token such as a
+  URL are exempt. No autocorrect.
+
 ## [0.4.0]
 
 - Add `Propitech/CommentBudget`: cap a comment run at `MaxClassProseLines`
