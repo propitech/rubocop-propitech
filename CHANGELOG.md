@@ -2,9 +2,16 @@
 
 ## [Unreleased]
 
-- Raise `required_ruby_version` to `>= 3.4`. CI now runs a single Ruby 3.4 job
-  on the self-hosted fleet, whose runner image carries 3.4.9, so support for
-  3.3 is no longer verified and the gemspec no longer claims it.
+## [0.4.0]
+
+- Add `Propitech/CommentBudget`: cap a comment run at `MaxClassProseLines`
+  (default 1) directly above a class or module, `MaxProseLines` (default 2)
+  elsewhere. A directive, a YARDoc usage block, or a run within the budget
+  for its position passes; ships disabled by default so a repository can
+  sweep its comments before enabling it.
+- Raise `required_ruby_version` to `>= 3.4`. CI runs a single Ruby 3.4 job on
+  the self-hosted fleet, whose runner image carries 3.4.9; support for 3.3 is
+  unverified and the gemspec excludes it.
 
 ## [0.3.0]
 
