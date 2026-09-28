@@ -307,4 +307,106 @@ RSpec.describe RuboCop::Cop::Propitech::CommentBudget, :config do
       class Refund; end
     RUBY
   end
+
+  describe "MaxCommentLineLength" do
+    def line_message(length, max = 100)
+      format(described_class::LINE_MSG, length: length, max: max)
+    end
+
+    def excess(line, max = 100)
+      "#{" " * max}#{"^" * (line.length - max)}"
+    end
+
+    it "passes an indented comment line of exactly 100 characters from its #" do
+      line = "# #{"a" * 48} #{"b" * 49}"
+      expect_no_offenses(<<~RUBY)
+        def foo
+          #{line}
+          bar
+        end
+      RUBY
+    end
+
+    it "reports a comment line of 101 characters at its own position" do
+      line = "# #{"a" * 48} #{"b" * 50}"
+      expect_offense(<<~RUBY)
+        def foo
+          #{line}
+          #{excess(line)} #{line_message(101)}
+          bar
+        end
+      RUBY
+    end
+
+    it "reports each over-long line of a run, separately from the run budget" do
+      line = "# #{"a" * 48} #{"b" * 50}"
+      expect_offense(<<~RUBY)
+        #{line}
+        #{"^" * line.length} #{described_class::MSG}
+        #{excess(line)} #{line_message(101)}
+        # A second prose line.
+        #{line}
+        #{excess(line)} #{line_message(101)}
+        def foo; end
+      RUBY
+    end
+
+    it "passes over-long directive lines: a magic comment, markers and a schema block" do
+      detail = "#  terms_no_overlap  (school_id WITH =, daterange(starts_on, ends_on) WITH &&) #{"x" * 40}"
+      expect_no_offenses(<<~RUBY)
+        # frozen_string_literal: true
+        # == Schema Information
+        #
+        #{detail}
+        class Term
+          # rubocop:disable Metrics/AbcSize, Metrics/MethodLength, Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
+          # :reek:FeatureEnvy { enabled: false, exclude: [refund_amount_for_the_partial_reversal_of_a_settled_charge] }
+          # brakeman:ignore SQL Injection covering the sanitized upstream input from the vendor's signed webhook payload
+          def foo; end
+        end
+      RUBY
+    end
+
+    it "passes an over-long line whose text is a single token, such as a URL" do
+      url = "https://docs.stripe.com/api/refunds/object##{"refund_object-destination_details" * 3}"
+      expect_no_offenses(<<~RUBY)
+        # @see
+        #   #{url}
+        def foo; end
+      RUBY
+    end
+
+    it "reports an over-long indented continuation under a YARD tag" do
+      line = "#   a payload carrying the vendor's webhook signature, its retry count and #{"z" * 30}"
+      expect_offense(<<~RUBY)
+        # @param payload [Hash]
+        #{line}
+        #{excess(line)} #{line_message(line.length)}
+        def retry_webhook(payload); end
+      RUBY
+    end
+
+    it "ignores a trailing comment on a code line" do
+      expect_no_offenses(<<~RUBY)
+        x = 1 # #{"a trailing note " * 8}
+      RUBY
+    end
+
+    context "with MaxCommentLineLength configured to 40" do
+      let(:cop_config) { { "MaxCommentLineLength" => 40 } }
+
+      it "reports a 41-character line and passes a 40-character one" do
+        long = "# #{"a" * 19} #{"b" * 19}"
+        short = "# #{"a" * 18} #{"b" * 19}"
+        expect_offense(<<~RUBY)
+          #{short}
+          def foo; end
+
+          #{long}
+          #{excess(long, 40)} #{line_message(41, 40)}
+          def bar; end
+        RUBY
+      end
+    end
+  end
 end

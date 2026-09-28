@@ -57,11 +57,21 @@ tag lines from YARD's standard set (`@param`, `@return`, `@raise`, `@yield`,
 `@attr`, `@attr_reader`, `@attr_writer`, `@abstract`, `@option`, `@note`,
 `@overload`, `@private`, `@todo`, `@since`, `@author`, `@version`), an
 indented continuation under any tag, or a bare `#` line anywhere in the
-block. A continuation under a tag carries no line cap of its own, by design:
+block. A continuation under a tag carries no line-count cap of its own, by design:
 the tag it continues is what marks the run as a YARDoc usage block. A
 trailing comment on a code line (`foo # bar`) never joins a run,
-and a `=begin`/`=end` block comment is outside the cop's scope. Ships
-disabled by default; enable it once a repository's comment sweep is done.
+and a `=begin`/`=end` block comment is outside the cop's scope.
+
+The cop also caps every full-line comment at `MaxCommentLineLength`
+characters (default 100), counted from the `#` to the end of the line, so a
+paragraph cannot pass the line budget by being squeezed onto one line. A
+YARD tag's continuation line counts like any other. A directive line is
+exempt, and so is a line whose text is a single token with no spaces, such
+as a URL. Each over-long line is reported on its own, with the excess
+characters highlighted; there is no autocorrect.
+
+Ships disabled by default; enable it once a repository's comment sweep is
+done.
 
 ```ruby
 # bad
@@ -127,8 +137,8 @@ Propitech/CommentBudget:
   Enabled: true
 ```
 
-`MaxProseLines` and `MaxClassProseLines` are optional overrides of its two
-defaults.
+`MaxProseLines`, `MaxClassProseLines` and `MaxCommentLineLength` are optional
+overrides of its three defaults.
 
 ## Development
 

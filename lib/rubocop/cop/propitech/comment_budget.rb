@@ -1,10 +1,12 @@
 # frozen_string_literal: true
 
+require_relative "comment_line_length"
+
 module RuboCop
   module Cop
     module Propitech
       # Caps a comment run at a line budget set by what it sits above.
-      # @example MaxProseLines: 2, MaxClassProseLines: 1 (defaults)
+      # @example MaxProseLines: 2, MaxClassProseLines: 1, MaxCommentLineLength: 100 (defaults)
       #   # bad
       #   # The vendor's webhook retries with a stale signature after a
       #   # timeout, so this handler re-verifies each retry.
@@ -16,6 +18,8 @@ module RuboCop
       #   # @param payload [Hash]
       #   def handle_retry(payload); end
       class CommentBudget < Base
+        include CommentLineLength
+
         MSG = "Comments are a YARDoc usage block, a directive, or an external constraint note " \
               "within the line budget; rationale goes to the pull request, Linear or Notion " \
               "(AGENTS.md#code-style)."
@@ -32,7 +36,10 @@ module RuboCop
         CLASS_OR_MODULE = /\A\s*(?:class|module)\b/
 
         def on_new_investigation
-          comment_runs.each { |run| check_run(run) }
+          comment_runs.each do |run|
+            check_run(run)
+            check_line_lengths(run)
+          end
         end
 
         private
@@ -53,6 +60,13 @@ module RuboCop
           add_offense(run.first, message: MSG)
         end
 
+        def schema_block(run)
+          header_index = run.index { |comment| comment.text.match?(SCHEMA_HEADER) }
+          return [] unless header_index
+
+          run[header_index..].take_while { |comment| schema_line?(comment) }
+        end
+
         def max_lines_for(run)
           above_class_or_module?(run) ? max_class_prose_lines : max_prose_lines
         end
@@ -71,13 +85,11 @@ module RuboCop
         end
 
         def directive_run?(run)
-          header_index = run.index { |comment| comment.text.match?(SCHEMA_HEADER) }
-          return run.all? { |comment| directive_line?(comment) } unless header_index
+          block = schema_block(run)
+          return run.all? { |comment| directive_line?(comment) } if block.empty?
+          return false unless block.last.equal?(run.last)
 
-          schema_block = run[header_index..].take_while { |comment| schema_line?(comment) }
-          return false unless schema_block.size == run.size - header_index
-
-          run[0...header_index].all? { |comment| directive_line?(comment) }
+          run.take_while { |comment| !block.first.equal?(comment) }.all? { |comment| directive_line?(comment) }
         end
 
         def directive_line?(comment)
