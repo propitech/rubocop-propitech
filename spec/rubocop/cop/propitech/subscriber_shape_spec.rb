@@ -240,6 +240,16 @@ RSpec.describe RuboCop::Cop::Propitech::SubscriberShape, :config do
       RUBY
     end
 
+    it "passes a shared constant directly under the commands namespace" do
+      expect_no_offenses(<<~RUBY)
+        module Plans
+          class RedrawSubscriber < DomainEvents::Subscriber
+            include Commands::AdminActor
+          end
+        end
+      RUBY
+    end
+
     it "passes a command call outside a subscriber" do
       expect_no_offenses(<<~RUBY)
         module Commands

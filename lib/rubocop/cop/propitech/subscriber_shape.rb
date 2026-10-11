@@ -79,12 +79,13 @@ module RuboCop
           end
         end
 
-        # A subscriber's domain is its top-level module, and its commands sit under Commands::<Domain>.
+        # A subscriber's domain is its top-level module, and its commands sit under Commands::<Domain>::<Command>;
+        # a two-segment name such as the mixin Commands::AdminActor is no domain's command.
         def check_command(const, path)
           return if path.size < 2 || const.parent&.const_type?
 
-          namespace, command_domain = const.const_name.split("::")
-          return unless namespace == option("CommandsNamespace") && command_domain
+          namespace, command_domain, command = const.const_name.split("::")
+          return unless namespace == option("CommandsNamespace") && command
           return if command_domain == path.first
 
           report(const, MSG_FOREIGN, path, command: const.const_name, domain: path.first,
