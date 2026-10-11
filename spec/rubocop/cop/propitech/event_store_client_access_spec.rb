@@ -26,6 +26,20 @@ RSpec.describe RuboCop::Cop::Propitech::EventStoreClientAccess, :config do
     RUBY
   end
 
+  it "flags the client read through safe navigation" do
+    expect_offense(<<~RUBY)
+      Rails.configuration&.event_store.publish(event)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ #{client_message("Rails.configuration&.event_store")}
+    RUBY
+  end
+
+  it "flags the client read through safe navigation all the way down" do
+    expect_offense(<<~RUBY)
+      Rails.application&.config&.event_store&.read
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ #{client_message("Rails.application&.config&.event_store")}
+    RUBY
+  end
+
   it "flags the client stubbed in a spec" do
     expect_offense(<<~RUBY)
       allow(Rails.configuration.event_store).to receive(:publish)

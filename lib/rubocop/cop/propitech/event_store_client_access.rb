@@ -24,8 +24,8 @@ module RuboCop
         # @!method rails_config?(node)
         def_node_matcher :rails_config?, <<~PATTERN
           {
-            (send (const {nil? cbase} :Rails) :configuration)
-            (send (send (const {nil? cbase} :Rails) :application) :config)
+            (call (const {nil? cbase} :Rails) :configuration)
+            (call (call (const {nil? cbase} :Rails) :application) :config)
           }
         PATTERN
 
@@ -43,6 +43,7 @@ module RuboCop
           range = node.receiver.source_range.join(node.loc.selector)
           add_offense(range, message: format(MSG_CLIENT, name: range.source, publisher: publisher))
         end
+        alias on_csend on_send
 
         private
 
