@@ -12,3 +12,19 @@ Propitech/CommentBudget:
   MaxProseLines: 2
   MaxClassProseLines: 1
   MaxCommentLineLength: 100
+
+Propitech/EventStoreClientAccess:
+  Description: 'Reach the event store only through the DomainEvents wrapper; never reference the store client or its library constants elsewhere.'
+  Enabled: true
+  VersionAdded: '0.6.0'
+  Namespaces:
+    - RubyEventStore
+    - RailsEventStore
+  ClientAccessors:
+    - event_store
+  Publisher: 'DomainEvents::Publisher'
+  Exclude:
+    - 'app/business_logic/domain_events.rb'
+    - 'app/business_logic/domain_events/**/*'
+    - 'config/initializers/domain_events.rb'
+    - 'spec/support/domain_events.rb'
