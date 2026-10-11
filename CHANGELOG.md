@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+## [0.6.0]
+
+- Add `Propitech/EventStoreClientAccess`: keep the event store behind the
+  app's `DomainEvents` wrapper (Rule 5 of movely's `docs/events.md`). Flags a
+  top-level `RubyEventStore` or `RailsEventStore` constant, and the store
+  client read or replaced through `Rails.configuration.event_store` or
+  `Rails.application.config.event_store`, outside the wrapper's module, its
+  directory, its initializer and its spec support. Routes are not excluded.
+  `Namespaces`, `ClientAccessors` and `Publisher` are options. Ships enabled;
+  no autocorrect.
+
 ## [0.5.0]
 
 - `Propitech/CommentBudget` caps each full-line comment at

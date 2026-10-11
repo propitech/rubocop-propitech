@@ -5,6 +5,7 @@ require "lint_roller"
 
 require_relative "version"
 require_relative "../cop/propitech/comment_budget"
+require_relative "../cop/propitech/event_store_client_access"
 require_relative "../cop/propitech/no_view_assembly"
 
 module RuboCop

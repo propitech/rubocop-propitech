@@ -86,6 +86,37 @@ end
 def handle_retry(payload); end
 ```
 
+### `Propitech/EventStoreClientAccess`
+
+Keeps the event store behind the app's `DomainEvents` wrapper, as Rule 5 of
+movely's `docs/events.md` asks: code publishes through
+`DomainEvents::Publisher`, and `rails_event_store` stays an implementation
+detail of the wrapper. The cop flags two things outside the wrapper:
+
+- a top-level constant named in `Namespaces` (default `RubyEventStore` and
+  `RailsEventStore`), whatever is nested under it;
+- the store client read or replaced through `Rails.configuration` or
+  `Rails.application.config`, by an accessor named in `ClientAccessors`
+  (default `event_store`).
+
+The wrapper's own files are excluded by the shipped default: the
+`app/business_logic/domain_events.rb` module, everything under
+`app/business_logic/domain_events/`, `config/initializers/domain_events.rb` and
+`spec/support/domain_events.rb`. Nothing else is, routes included: a mount of
+the store's browser goes behind the wrapper too. `Publisher` (default
+`DomainEvents::Publisher`) is the class the message points to.
+
+```ruby
+# bad
+Rails.configuration.event_store.publish(event)
+raise RubyEventStore::EventNotFound
+mount RailsEventStore::Browser, at: "/event_store"
+
+# good
+EventPublisher.new(actor: user).publish(DomainEvents::Booking::Booked, data: {booking_id: 1})
+DomainEvents.find(event_id)
+```
+
 ## Installation
 
 Add the gem to the lint group of your `Gemfile`:
@@ -139,6 +170,10 @@ Propitech/CommentBudget:
 
 `MaxProseLines`, `MaxClassProseLines` and `MaxCommentLineLength` are optional
 overrides of its three defaults.
+
+`Propitech/EventStoreClientAccess` ships enabled and runs under plain
+`rubocop`. A repository whose wrapper lives elsewhere overrides its `Exclude`
+list, and `Namespaces`, `ClientAccessors` and `Publisher` in the same way.
 
 ## Development
 
