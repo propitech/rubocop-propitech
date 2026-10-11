@@ -8,6 +8,7 @@ require_relative "../cop/propitech/comment_budget"
 require_relative "../cop/propitech/event_name"
 require_relative "../cop/propitech/event_store_client_access"
 require_relative "../cop/propitech/no_view_assembly"
+require_relative "../cop/propitech/subscriber_shape"
 
 module RuboCop
   module Propitech
