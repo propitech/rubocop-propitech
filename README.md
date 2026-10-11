@@ -117,6 +117,44 @@ EventPublisher.new(actor: user).publish(DomainEvents::Booking::Booked, data: {bo
 DomainEvents.find(event_id)
 ```
 
+### `Propitech/EventName`
+
+Names each domain event as Rule 2 of movely's `docs/events.md` asks:
+`<domain>.<fact>`, with the fact in the past tense. The app derives the name
+from the class's place, so a `Booked` class in a `Booking` module under
+`DomainEvents` is `booking.booked`. The cop checks each class declared with
+`DomainEvents::Event` as its base class, or with a bare `Event` read from
+inside the `DomainEvents` module, and flags its name when:
+
+- the class does not sit exactly at `DomainEvents::<Domain>::<Fact>`, which
+  the app would refuse when the event is built;
+- the last word of `<Fact>` does not read as a past participle.
+
+The past-tense test is the one movely's `domain_event` generator applies: a
+word ending in `-ed` longer than three letters, or an irregular participle
+from `PastParticiples` (`paid`, `sent`, `drawn` and others), optionally after
+a prefix from `ParticiplePrefixes` (`overpaid`, `withdrawn`), except a word
+listed in `NotPastTense` (`need`, `feed`, `seed` and others). A name the
+generator accepts is never an offence. Only `class` declarations are checked;
+an event class built with `Class.new` in a spec is not.
+
+```ruby
+# bad
+module DomainEvents
+  class Booked < Event; end        # no domain module
+  module Booking
+    class Book < Event; end        # not in the past tense
+  end
+end
+
+# good
+module DomainEvents
+  module Booking
+    class Booked < Event; end
+  end
+end
+```
+
 ## Installation
 
 Add the gem to the lint group of your `Gemfile`:
@@ -174,6 +212,11 @@ overrides of its three defaults.
 `Propitech/EventStoreClientAccess` ships enabled and runs under plain
 `rubocop`. A repository whose wrapper lives elsewhere overrides its `Exclude`
 list, and `Namespaces`, `ClientAccessors` and `Publisher` in the same way.
+
+`Propitech/EventName` ships enabled and runs under plain `rubocop`. `Namespace`
+and `BaseClass` name where the app's events live, and `PastParticiples`,
+`ParticiplePrefixes` and `NotPastTense` follow the app's generator if it
+changes its word lists.
 
 ## Development
 

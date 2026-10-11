@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+## [0.7.0]
+
+- Add `Propitech/EventName`: name each domain event `<domain>.<fact>` with the
+  fact in the past tense (Rule 2 of movely's `docs/events.md`). A class whose
+  base class is `DomainEvents::Event` (or a bare `Event` read from inside the
+  `DomainEvents` module) is an offence unless it sits at
+  `DomainEvents::<Domain>::<Fact>` and the last word of `<Fact>` reads as a
+  past participle. The past-tense test is the one movely's `domain_event`
+  generator applies, so a name the generator accepts is never an offence.
+  `Namespace`, `BaseClass`, `PastParticiples`, `ParticiplePrefixes` and
+  `NotPastTense` are options. Ships enabled; no autocorrect.
+
 ## [0.6.0]
 
 - Add `Propitech/EventStoreClientAccess`: keep the event store behind the

@@ -28,3 +28,62 @@ Propitech/EventStoreClientAccess:
     - 'app/business_logic/domain_events/**/*'
     - 'config/initializers/domain_events.rb'
     - 'spec/support/domain_events.rb'
+
+Propitech/EventName:
+  Description: 'Name a domain event <domain>.<fact> by its place at DomainEvents::<Domain>::<Fact>, with the fact in the past tense.'
+  Enabled: true
+  VersionAdded: '0.7.0'
+  Namespace: 'DomainEvents'
+  BaseClass: 'Event'
+  PastParticiples:
+    - paid
+    - sent
+    - made
+    - held
+    - begun
+    - gone
+    - lost
+    - taken
+    - given
+    - shown
+    - built
+    - bought
+    - kept
+    - left
+    - spent
+    - told
+    - sold
+    - found
+    - won
+    - chosen
+    - written
+    - broken
+    - frozen
+    - hidden
+    - known
+    - seen
+    - done
+    - reset
+    - drawn
+    - withdrawn
+  ParticiplePrefixes:
+    - re
+    - over
+    - under
+    - un
+    - mis
+    - out
+    - pre
+    - up
+  NotPastTense:
+    - need
+    - feed
+    - speed
+    - seed
+    - bleed
+    - breed
+    - weed
+    - deed
+    - heed
+    - creed
+    - greed
