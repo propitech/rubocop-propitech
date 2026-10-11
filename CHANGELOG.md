@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+## [0.8.0]
+
+- Add `Propitech/SubscriberShape`: keep each event subscriber in the domain
+  that reacts (Rules 3 and 4 of movely's `docs/events.md`). A class inheriting
+  `DomainEvents::Subscriber` is an offence unless it is named
+  `<Domain>::<Reaction>Subscriber` in `app/jobs/<domain>/<reaction>_subscriber.rb`,
+  and so is a class named `...Subscriber` under `app/jobs/` that does not
+  inherit it. Inside a subscriber, publishing an event is an offence (chain
+  depth is one), and so is a reference to `Commands::<Other>::...` when
+  `<Other>` is not the subscriber's top-level module. `BaseClass`,
+  `Directory`, `NameSuffix`, `CommandsNamespace`, `EventNamespace`,
+  `Publisher` and `PublishMethods` are options. Ships enabled; no
+  autocorrect.
+
 ## [0.7.0]
 
 - Add `Propitech/EventName`: name each domain event `<domain>.<fact>` with the

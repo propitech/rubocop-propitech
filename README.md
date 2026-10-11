@@ -155,6 +155,54 @@ module DomainEvents
 end
 ```
 
+### `Propitech/SubscriberShape`
+
+Keeps each event subscriber in the domain that reacts, as Rules 3 and 4 of
+movely's `docs/events.md` ask. A subscriber is a class declared with
+`DomainEvents::Subscriber` as its base class. The cop flags:
+
+- a subscriber that is not named `<Domain>::<Reaction>Subscriber`, or whose
+  file is not `app/jobs/<domain>/<reaction>_subscriber.rb`, the path movely's
+  `event_subscriber` generator writes;
+- a class named `...Subscriber` in a file under `app/jobs/` that does not
+  inherit `DomainEvents::Subscriber`;
+- a `publish` call inside a subscriber whose first argument is a
+  `DomainEvents::...` class, or whose receiver names a class ending in
+  `Publisher` (`DomainEvents::Publisher`, `Bookings::EventPublisher`): chain
+  depth is one, so a second hop is a saga planned in its own ticket;
+- a reference to `Commands::<Other>::...` inside a subscriber whose top-level
+  module is not `<Other>`: the other domain subscribes to the same event
+  itself, or the coordination is a planned saga.
+
+A subscriber's domain is its top-level module, and the command domain is the
+segment after `Commands`, compared as written: `Plans::RedrawSubscriber` may
+call `Commands::Plans::...` and no other command. A subscriber in no domain
+module gets the place offence only. Only `class` declarations are checked; a
+subscriber built with `Class.new` in a spec is not, and neither is the
+subscription line in `config/initializers/domain_events.rb`, where the app
+already refuses a class that is not a `DomainEvents::Subscriber`.
+
+```ruby
+# bad, in app/jobs/plans/redraw_subscriber.rb
+module Plans
+  class RedrawSubscriber < DomainEvents::Subscriber
+    def handle(event)
+      Commands::Invoices::Create.call(school_id: event.data.fetch(:school_id))
+      DomainEvents::Publisher.new.publish(DomainEvents::Plan::Redrawn, data: {})
+    end
+  end
+end
+
+# good, in app/jobs/plans/redraw_subscriber.rb
+module Plans
+  class RedrawSubscriber < DomainEvents::Subscriber
+    def handle(event)
+      Commands::Plans::RedrawCatalogue.call(run_id: event.data.fetch(:run_id))
+    end
+  end
+end
+```
+
 ## Installation
 
 Add the gem to the lint group of your `Gemfile`:
@@ -217,6 +265,12 @@ list, and `Namespaces`, `ClientAccessors` and `Publisher` in the same way.
 and `BaseClass` name where the app's events live, and `PastParticiples`,
 `ParticiplePrefixes` and `NotPastTense` follow the app's generator if it
 changes its word lists.
+
+`Propitech/SubscriberShape` ships enabled and runs under plain `rubocop`.
+`BaseClass`, `Directory` and `NameSuffix` name the app's subscriber base and
+where subscribers live, `CommandsNamespace` the module that holds each
+domain's commands, and `EventNamespace`, `Publisher` and `PublishMethods` the
+publish call it treats as a chain.
 
 ## Development
 

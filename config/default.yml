@@ -87,3 +87,16 @@ Propitech/EventName:
     - heed
     - creed
     - greed
+
+Propitech/SubscriberShape:
+  Description: 'Keep each event subscriber at <Domain>::<Reaction>Subscriber in its domain''s directory, inheriting the subscriber base; it publishes no event and calls only its own domain''s commands.'
+  Enabled: true
+  VersionAdded: '0.8.0'
+  BaseClass: 'DomainEvents::Subscriber'
+  Directory: 'app/jobs'
+  NameSuffix: 'Subscriber'
+  CommandsNamespace: 'Commands'
+  EventNamespace: 'DomainEvents'
+  Publisher: 'DomainEvents::Publisher'
+  PublishMethods:
+    - publish
