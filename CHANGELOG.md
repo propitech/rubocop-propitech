@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+## [0.9.0]
+
+- Add three spec cops, each shipping disabled and driven by configuration.
+  `Propitech/FormSignInOutsideAllowList` flags a call to a method named in
+  `Methods` in a file outside the `AllowedPaths` globs.
+  `Propitech/AuditTagOnExampleGroup` flags a symbol named in `Tags` on
+  `describe`, `context`, `feature` or `RSpec.describe` rather than on an
+  example. `Propitech/StyleReadInSystemSpec` warns about a
+  `getComputedStyle` or `getBoundingClientRect` string passed to
+  `evaluate_script`, `evaluate_async_script` or `execute_script`, and about
+  `native.size` and `native.location`, under `Include`; a
+  `rubocop:disable` comment with the reason silences a read that states an
+  accessibility requirement. No autocorrect.
+
 ## [0.8.0]
 
 - Add `Propitech/SubscriberShape`: keep each event subscriber in the domain

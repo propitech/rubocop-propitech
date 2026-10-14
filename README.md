@@ -203,6 +203,86 @@ module Plans
 end
 ```
 
+### `Propitech/FormSignInOutsideAllowList`
+
+Keeps a slow form sign-in helper to the files that test signing in. The cop
+flags a call to any method named in `Methods`, with or without a receiver, in
+a file that none of the `AllowedPaths` globs matches. Both keys default to an
+empty list, so the cop flags nothing until a repository names its helper and
+its login-flow files. Paths are globs relative to the project root. Ships
+disabled.
+
+```yaml
+Propitech/FormSignInOutsideAllowList:
+  Enabled: true
+  Methods:
+    - sign_in_through_form
+  AllowedPaths:
+    - 'spec/system/users/**/*'
+    - 'spec/system/claim_account_spec.rb'
+```
+
+```ruby
+# bad, in spec/system/schools/members_invite_teacher_spec.rb
+before { sign_in_through_form(admin) }
+
+# good, in spec/system/users/sessions_spec.rb
+before { sign_in_through_form(user) }
+```
+
+### `Propitech/AuditTagOnExampleGroup`
+
+Keeps an audit tag on the example it audits. The cop flags a symbol named in
+`Tags` (or the same name as a `tag: true` metadata key) passed to `describe`,
+`context` or `feature`, bare or on `RSpec`: a tag on a group audits every
+example inside it. `Tags` defaults to an empty list. Ships disabled.
+
+```yaml
+Propitech/AuditTagOnExampleGroup:
+  Enabled: true
+  Tags:
+    - audit_on_pr
+```
+
+```ruby
+# bad
+RSpec.describe "Inviting a teacher", :audit_on_pr, type: :system do
+  it "sends the invitation" do; end
+end
+
+# good
+RSpec.describe "Inviting a teacher", type: :system do
+  it "sends the invitation", :audit_on_pr do; end
+end
+```
+
+### `Propitech/StyleReadInSystemSpec`
+
+Warns about a style or geometry read in a system spec, where the browser
+makes it slow and a component or view spec can pin it. The cop flags, inside
+the `Include` globs:
+
+- a string argument to `evaluate_script`, `evaluate_async_script` or
+  `execute_script` that contains `getComputedStyle` or
+  `getBoundingClientRect`;
+- a call to `native.size` or `native.location`.
+
+It reports at warning severity (`Severity: warning`) and ships disabled.
+`Include` defaults to `spec/system/**/*`. A read that states an
+accessibility requirement, such as a 44 px hit target or a focus ring, may
+stay: silence that line with an ordinary `rubocop:disable` comment and put
+the reason in it. The cop does not check that a reason is present.
+
+```ruby
+# bad
+page.evaluate_script("getComputedStyle(el).display")
+
+# good, a hit target
+# rubocop:disable Propitech/StyleReadInSystemSpec -- 44 px hit target
+page.evaluate_script("document.querySelector('button').getBoundingClientRect().height")
+# rubocop:enable Propitech/StyleReadInSystemSpec
+```
+
 ## Installation
 
 Add the gem to the lint group of your `Gemfile`:
@@ -271,6 +351,11 @@ changes its word lists.
 where subscribers live, `CommandsNamespace` the module that holds each
 domain's commands, and `EventNamespace`, `Publisher` and `PublishMethods` the
 publish call it treats as a chain.
+
+`Propitech/FormSignInOutsideAllowList`, `Propitech/AuditTagOnExampleGroup` and
+`Propitech/StyleReadInSystemSpec` ship disabled, and the first two flag nothing
+until `Methods` or `Tags` names what to look for. A repository turns each on in
+its `.rubocop.yml` with the keys described above.
 
 ## Development
 
