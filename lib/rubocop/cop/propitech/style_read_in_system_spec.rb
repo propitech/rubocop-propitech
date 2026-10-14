@@ -68,7 +68,7 @@ module RuboCop
         end
 
         def script_helper?(definition)
-          parameters = definition.arguments.filter_map(&:name)
+          parameters = definition.arguments.argument_list.filter_map(&:name)
           definition.each_descendant(:send, :csend).any? do |call|
             SCRIPT_METHODS.include?(call.method_name) && interpolates?(call, parameters)
           end

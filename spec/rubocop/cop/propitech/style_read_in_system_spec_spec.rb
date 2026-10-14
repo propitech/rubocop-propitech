@@ -66,6 +66,17 @@ RSpec.describe RuboCop::Cop::Propitech::StyleReadInSystemSpec, :config do
     RUBY
   end
 
+  it "reads a helper with a destructured parameter without error and follows it" do
+    expect_offense(<<~'RUBY', "spec/system/a_spec.rb")
+      def size_of((width, height), script)
+        page.evaluate_script("#{width} #{height} #{script}")
+      end
+
+      size_of([1, 2], "el.getBoundingClientRect()")
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Do not read a computed style or a box (`getBoundingClientRect`) in a system spec: pin it in the component or view spec. A read for an accessibility requirement stays with a `rubocop:disable` comment that gives the reason.
+    RUBY
+  end
+
   it "does not follow a constant defined in another file" do
     expect_no_offenses(<<~RUBY, "spec/system/a_spec.rb")
       page.evaluate_script(MemberCardProbe::LINK)
