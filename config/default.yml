@@ -100,3 +100,24 @@ Propitech/SubscriberShape:
   Publisher: 'DomainEvents::Publisher'
   PublishMethods:
     - publish
+
+Propitech/FormSignInOutsideAllowList:
+  Description: 'Report a call to a configured sign-in method in any file outside the AllowedPaths globs.'
+  Enabled: false
+  VersionAdded: '0.9.0'
+  Methods: []
+  AllowedPaths: []
+
+Propitech/AuditTagOnExampleGroup:
+  Description: 'Put a configured audit tag on the example it audits, never on a describe, context or feature group.'
+  Enabled: false
+  VersionAdded: '0.9.0'
+  Tags: []
+
+Propitech/StyleReadInSystemSpec:
+  Description: 'Warn about a computed-style or box read (getComputedStyle, getBoundingClientRect, native.size, native.location) in a system spec; pin it in a component or view spec, or disable the line with the reason.'
+  Enabled: false
+  Severity: warning
+  VersionAdded: '0.9.0'
+  Include:
+    - 'spec/system/**/*'
