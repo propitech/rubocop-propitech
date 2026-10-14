@@ -37,6 +37,59 @@ RSpec.describe RuboCop::Cop::Propitech::StyleReadInSystemSpec, :config do
     RUBY
   end
 
+  it "flags a read given to an endless-def helper that interpolates its argument", :ruby34 do
+    expect_offense(<<~'RUBY', "spec/system/a_spec.rb")
+      def measure(script) = page.evaluate_script("(() => { #{script} })()")
+
+      measure("return document.querySelector('button').getBoundingClientRect().height")
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Do not read a computed style or a box (`getBoundingClientRect`) in a system spec: pin it in the component or view spec. A read for an accessibility requirement stays with a `rubocop:disable` comment that gives the reason.
+    RUBY
+  end
+
+  it "flags a read given to a helper defined after the call, with a normal def and execute_script" do
+    expect_offense(<<~'RUBY', "spec/system/a_spec.rb")
+      run("getComputedStyle(el).display")
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Do not read a computed style or a box (`getComputedStyle`) in a system spec: pin it in the component or view spec. A read for an accessibility requirement stays with a `rubocop:disable` comment that gives the reason.
+
+      def run(code)
+        page.execute_script("return (function () { #{code} })()")
+      end
+    RUBY
+  end
+
+  it "flags a read given as a keyword argument to a helper", :ruby34 do
+    expect_offense(<<~'RUBY', "spec/system/a_spec.rb")
+      def kw(script:) = page.evaluate_script("(() => { #{script} })()")
+
+      kw(script: "getComputedStyle(el).color")
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Do not read a computed style or a box (`getComputedStyle`) in a system spec: pin it in the component or view spec. A read for an accessibility requirement stays with a `rubocop:disable` comment that gives the reason.
+    RUBY
+  end
+
+  it "does not follow a constant defined in another file" do
+    expect_no_offenses(<<~RUBY, "spec/system/a_spec.rb")
+      page.evaluate_script(MemberCardProbe::LINK)
+    RUBY
+  end
+
+  it "passes a helper call that reads no style", :ruby34 do
+    expect_no_offenses(<<~'RUBY', "spec/system/a_spec.rb")
+      def measure(script) = page.evaluate_script("(() => { #{script} })()")
+
+      measure("return document.title")
+    RUBY
+  end
+
+  it "passes a call to a method that does not interpolate its argument into a script", :ruby34 do
+    expect_no_offenses(<<~RUBY, "spec/system/a_spec.rb")
+      def label(text) = page.evaluate_script("document.title")
+      def other(text) = text.upcase
+
+      label("getComputedStyle")
+      other("getComputedStyle")
+    RUBY
+  end
+
   it "flags native.size and native.location" do
     expect_offense(<<~RUBY, "spec/system/a_spec.rb")
       find("button").native.size

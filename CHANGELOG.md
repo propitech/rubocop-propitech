@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+## [0.9.1]
+
+- `Propitech/StyleReadInSystemSpec` now follows a helper. A method defined in the
+  same spec file that interpolates one of its parameters into a string passed to
+  `evaluate_script`, `evaluate_async_script` or `execute_script` has the strings
+  given to a receiverless call of it checked like a direct script, so
+  `measure("...getBoundingClientRect()...")` is reported on that argument; a
+  string value of a keyword argument is checked too. The cop sees one file at a
+  time and only a string at the call, so it still does not see a script held
+  in a constant or a method of another file and passed by reference, such as
+  `evaluate_script(MemberCardProbe::LINK)`. The only way to have such a read
+  checked is to write the script literal, or a same-file helper call, at the
+  call site in the spec.
+
 ## [0.9.0]
 
 - Add three spec cops, each shipping disabled and driven by configuration.

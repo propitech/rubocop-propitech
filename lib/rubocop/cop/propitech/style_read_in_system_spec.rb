@@ -6,6 +6,13 @@ module RuboCop
       # Warns about a computed-style or geometry read in a system spec: such a pin belongs in the
       # component or view spec. A read that states an accessibility requirement (a hit target, a
       # focus ring) stays, silenced by an ordinary `rubocop:disable` comment that carries the reason.
+      # A method defined in the same file that interpolates a parameter into such a script string
+      # (`def measure(script) = page.evaluate_script("#{script}")`) is followed: the strings given to
+      # a receiverless call of it are checked like a direct script: a string argument, or a string
+      # value of a keyword argument. The cop sees one file at a time and only a string at the call, so
+      # it does not see a script held in a constant or a method of another file and passed by reference
+      # (`page.evaluate_script(MemberCardProbe::LINK)`). The only way to have such a read checked is to
+      # write the script literal, or a same-file helper call, at the call site in the spec.
       # @example
       #   # bad
       #   page.evaluate_script("getComputedStyle(el).display")
@@ -27,16 +34,21 @@ module RuboCop
         STYLE_READS = %w[getComputedStyle getBoundingClientRect].freeze
         NATIVE_READS = %i[size location].freeze
 
-        RESTRICT_ON_SEND = SCRIPT_METHODS + NATIVE_READS
-
         def_node_matcher :native_read?, <<~PATTERN
           (call (call _ :native) {:size :location})
         PATTERN
 
+        def on_new_investigation
+          super
+          @script_helpers = collect_script_helpers
+        end
+
         def on_send(node)
           if SCRIPT_METHODS.include?(node.method_name)
-            check_script(node)
-          elsif native_read?(node)
+            check_script(node.arguments)
+          elsif script_helper_call?(node)
+            check_script(helper_arguments(node))
+          elsif NATIVE_READS.include?(node.method_name) && native_read?(node)
             add_offense(node, message: format(MSG_NATIVE, read: "native.#{node.method_name}"))
           end
         end
@@ -44,8 +56,42 @@ module RuboCop
 
         private
 
-        def check_script(node)
-          node.arguments.each do |argument|
+        # Names of the methods this file defines whose body interpolates one of their own
+        # parameters into a script string, such as `def measure(script) = page.evaluate_script("#{script}")`.
+        def collect_script_helpers
+          ast = processed_source.ast
+          return [] unless ast
+
+          ast.each_node(:def).filter_map do |definition|
+            definition.method_name if script_helper?(definition)
+          end
+        end
+
+        def script_helper?(definition)
+          parameters = definition.arguments.filter_map(&:name)
+          definition.each_descendant(:send, :csend).any? do |call|
+            SCRIPT_METHODS.include?(call.method_name) && interpolates?(call, parameters)
+          end
+        end
+
+        def interpolates?(call, parameters)
+          call.arguments.any? do |argument|
+            argument.dstr_type? && argument.each_node(:lvar).any? do |name|
+              parameters.include?(name.children.first)
+            end
+          end
+        end
+
+        def helper_arguments(node)
+          node.arguments.flat_map { |argument| argument.hash_type? ? argument.values : [argument] }
+        end
+
+        def script_helper_call?(node)
+          node.receiver.nil? && @script_helpers.include?(node.method_name)
+        end
+
+        def check_script(arguments)
+          arguments.each do |argument|
             next unless argument.str_type? || argument.dstr_type?
 
             content = argument.each_node(:str).map(&:value).join
