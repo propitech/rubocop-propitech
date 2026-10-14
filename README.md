@@ -265,7 +265,17 @@ the `Include` globs:
 - a string argument to `evaluate_script`, `evaluate_async_script` or
   `execute_script` that contains `getComputedStyle` or
   `getBoundingClientRect`;
+- a receiverless call to a method defined in the same file that interpolates
+  one of its parameters into a string passed to one of those script methods
+  (`def measure(script) = page.evaluate_script("#{script}")`), when a string
+  argument, or a string value of a keyword argument, contains one of those names;
 - a call to `native.size` or `native.location`.
+
+The cop sees one file at a time and only a string at the call. It does not see
+a script held in a constant or a method of another file and passed by
+reference (`page.evaluate_script(MemberCardProbe::LINK)`). The only way to have
+such a read checked is to write the script literal, or a same-file helper call,
+at the call site in the spec.
 
 It reports at warning severity (`Severity: warning`) and ships disabled.
 `Include` defaults to `spec/system/**/*`. A read that states an
