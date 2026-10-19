@@ -121,3 +121,10 @@ Propitech/StyleReadInSystemSpec:
   VersionAdded: '0.9.0'
   Include:
     - 'spec/system/**/*'
+
+Propitech/FileOutsideAllowList:
+  Description: 'Report a file under Include that AllowedFiles does not list, once, on its first line; keep it with an allow-list entry or a rubocop:disable comment on line 1 that gives the reason.'
+  Enabled: false
+  VersionAdded: '0.10.0'
+  Include: []
+  AllowedFiles: []

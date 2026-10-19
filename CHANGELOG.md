@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+## [0.10.0]
+
+- Add `Propitech/FileOutsideAllowList`, shipping disabled, to freeze a
+  directory against new files. It reports a file that an `Include` glob matches
+  and no `AllowedFiles` entry lists, once, on its first line. A file is kept by
+  listing it in `AllowedFiles` or by a `rubocop:disable` comment with the reason
+  on line 1, the `frozen_string_literal` comment on line 2 and a matching
+  `rubocop:enable` comment as the last line. The gem names no path by default.
+
 ## [0.9.1]
 
 - `Propitech/StyleReadInSystemSpec` now follows a helper. A method defined in the
