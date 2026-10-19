@@ -230,6 +230,49 @@ before { sign_in_through_form(admin) }
 before { sign_in_through_form(user) }
 ```
 
+### `Propitech/FileOutsideAllowList`
+
+Freezes a directory against new files. The cop reports a file that an
+`Include` glob matches and no `AllowedFiles` entry lists, once per file, on its
+first line. Anything outside `Include`, and anything in `AllowedFiles`, is
+left alone. Both keys default to an empty list, so the cop flags nothing until a
+repository names the directory to freeze and the files it already holds. Paths
+are globs relative to the project root. Ships disabled.
+
+To keep a new file, add it to `AllowedFiles` with the reason beside it in the
+config, or put a `rubocop:disable` comment with the reason on line 1 of the
+file, the `frozen_string_literal` comment on line 2, and a matching
+`rubocop:enable` comment as the last line. The disable comment has to sit on
+line 1 because that is where the offence is reported, and the enable comment
+keeps `Lint/MissingCopEnableDirective` quiet. A disable comment after the
+magic comment on line 1 would turn it into an ordinary comment, and one on
+line 2 does not silence the cop.
+
+```yaml
+Propitech/FileOutsideAllowList:
+  Enabled: true
+  Include:
+    - 'spec/system/components/**/*_spec.rb'
+  AllowedFiles:
+    - 'spec/system/components/old_card_spec.rb'
+```
+
+```ruby
+# bad, in spec/system/components/new_card_spec.rb
+# frozen_string_literal: true
+
+RSpec.describe "New card", type: :system do
+end
+
+# good, in spec/system/components/new_card_spec.rb
+# rubocop:disable Propitech/FileOutsideAllowList -- tests the drag handle in a real browser
+# frozen_string_literal: true
+
+RSpec.describe "New card", type: :system do
+end
+# rubocop:enable Propitech/FileOutsideAllowList
+```
+
 ### `Propitech/AuditTagOnExampleGroup`
 
 Keeps an audit tag on the example it audits. The cop flags a symbol named in
@@ -362,9 +405,10 @@ where subscribers live, `CommandsNamespace` the module that holds each
 domain's commands, and `EventNamespace`, `Publisher` and `PublishMethods` the
 publish call it treats as a chain.
 
-`Propitech/FormSignInOutsideAllowList`, `Propitech/AuditTagOnExampleGroup` and
-`Propitech/StyleReadInSystemSpec` ship disabled, and the first two flag nothing
-until `Methods` or `Tags` names what to look for. A repository turns each on in
+`Propitech/FormSignInOutsideAllowList`, `Propitech/AuditTagOnExampleGroup`,
+`Propitech/StyleReadInSystemSpec` and `Propitech/FileOutsideAllowList` ship
+disabled, and the first, second and fourth flag nothing until `Methods`, `Tags`
+or `Include` names what to look for. A repository turns each on in
 its `.rubocop.yml` with the keys described above.
 
 ## Development
