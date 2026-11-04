@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+## [0.11.0]
+
+- Add `Propitech/SessionAtClockRelativeTime`, shipping disabled with
+  `Include: spec/**/*`. It flags a `create`, `build`, `build_stubbed`,
+  `create_list` or `build_list` of a factory named in `Factories` (default
+  `occurrence`) whose `starts_at:` or `ends_at:` is built from the clock:
+  `ago`, `from_now`, `since` or `until` on a duration with no argument,
+  `Time.current`, `Time.now`, `Time.zone.now`, `Date.current`,
+  `Date.yesterday` and the like, or a bare `yesterday`, also inside arithmetic. A session built that way fails
+  when the suite runs next to a closed day, for example `1.day.ago` on a
+  Monday. The cop leaves a call inside an example or group tagged `:open_day`,
+  inside a `travel_to` block, or built from `open_days_from_now`,
+  `open_days_ago`, `open_day_on_or_after`, `open_day_on_or_before` or
+  `open_day_noon`. It does not follow a local variable, a `let` name or a
+  method call.
+
 ## [0.10.0]
 
 - Add `Propitech/FileOutsideAllowList`, shipping disabled, to freeze a

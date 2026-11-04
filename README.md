@@ -336,6 +336,56 @@ page.evaluate_script("document.querySelector('button').getBoundingClientRect().h
 # rubocop:enable Propitech/StyleReadInSystemSpec
 ```
 
+### `Propitech/SessionAtClockRelativeTime`
+
+Flags a session built at a clock-relative time. An `Occurrence` validates
+`:closed_weekday` and Sunday is closed, so a spec that builds a session at
+`2.hours.from_now` or `1.day.ago` fails ("Starts at falls on a day the school
+is closed") whenever it runs next to a closed day, such as `1.day.ago` on a
+Monday. The cop checks `create`, `build`, `build_stubbed`, `create_list` and
+`build_list`, bare or on `FactoryBot`, whose first argument is a factory named
+in `Factories`, and reports a `starts_at:` or `ends_at:` value in which any of
+these appears:
+
+- `ago`, `from_now`, `since` or `until` on a duration, with no argument
+  (`2.hours.from_now`, `1.day.ago`, `3.days.since`; `1.day.ago(fixed_time)`
+  counts from the given time and is left alone);
+- `Time`, `DateTime` or `Date` read with `current`, `now`, `today`,
+  `yesterday` or `tomorrow`, and `Time.zone.now` or `Time.zone.today`;
+- a bare `yesterday`.
+
+Arithmetic on such a form (`Time.current + 1.hour`, `Date.current - 1`) is
+reported too. The cop leaves a call inside an example or group tagged
+`:open_day` (bare, or as `open_day: true`), a call inside a `travel_to` block,
+and a value that uses `open_days_from_now`, `open_days_ago`,
+`open_day_on_or_after`, `open_day_on_or_before` or `open_day_noon`.
+
+The cop reads one expression at a time. It does not follow a local variable, a
+`let` name or a method call: `starts_at: start` after `start = 2.hours.ago` is
+not reported, and neither is a factory called through a helper method.
+
+`Factories` defaults to `occurrence`. The cop ships disabled with
+`Include: spec/**/*`; an app enables it.
+
+```yaml
+Propitech/SessionAtClockRelativeTime:
+  Enabled: true
+  Factories:
+    - occurrence
+```
+
+```ruby
+# bad
+create(:occurrence, starts_at: 2.hours.from_now)
+create(:occurrence, starts_at: Date.yesterday.noon)
+
+# good
+create(:occurrence, starts_at: open_days_from_now(2))
+it "lists today's sessions", :open_day do
+  create(:occurrence, starts_at: 2.hours.from_now)
+end
+```
+
 ## Installation
 
 Add the gem to the lint group of your `Gemfile`:

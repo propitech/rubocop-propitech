@@ -128,3 +128,12 @@ Propitech/FileOutsideAllowList:
   VersionAdded: '0.10.0'
   Include: []
   AllowedFiles: []
+
+Propitech/SessionAtClockRelativeTime:
+  Description: 'Flag a session factory call whose starts_at or ends_at is built from the clock (2.hours.from_now, Time.current + ..., Date.yesterday); build it with an open-day helper, tag the example :open_day, or use travel_to.'
+  Enabled: false
+  VersionAdded: '0.11.0'
+  Include:
+    - 'spec/**/*'
+  Factories:
+    - occurrence
