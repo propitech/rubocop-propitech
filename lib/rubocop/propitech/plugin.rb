@@ -11,6 +11,7 @@ require_relative "../cop/propitech/event_store_client_access"
 require_relative "../cop/propitech/file_outside_allow_list"
 require_relative "../cop/propitech/form_sign_in_outside_allow_list"
 require_relative "../cop/propitech/no_view_assembly"
+require_relative "../cop/propitech/session_at_clock_relative_time"
 require_relative "../cop/propitech/style_read_in_system_spec"
 require_relative "../cop/propitech/subscriber_shape"
 
