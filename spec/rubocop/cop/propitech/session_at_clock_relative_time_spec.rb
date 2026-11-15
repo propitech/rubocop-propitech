@@ -312,6 +312,13 @@ RSpec.describe RuboCop::Cop::Propitech::SessionAtClockRelativeTime, :config do
       RUBY
     end
 
+    it "ignores an open-day helper given a clock value held in a let" do
+      expect_no_offenses(<<~RUBY)
+        let(:today) { Date.current }
+        create(:occurrence, starts_at: open_day_on_or_after(today))
+      RUBY
+    end
+
     it "does not follow a let through a second let" do
       expect_no_offenses(<<~RUBY)
         let(:base) { 2.hours.ago }
@@ -401,6 +408,41 @@ RSpec.describe RuboCop::Cop::Propitech::SessionAtClockRelativeTime, :config do
                                            ^^^^^^^^^^^^^ #{message}
             create(:occurrence, starts_at: later)
                                            ^^^^^ #{message}
+          end
+        end
+      RUBY
+    end
+
+    it "flags a day step added to a clock value held in a local" do
+      expect_offense(<<~RUBY)
+        it "lists them", :open_day do
+          today = Date.current
+          create(:occurrence, starts_at: today + 2)
+                                         ^^^^^^^^^ #{message}
+        end
+      RUBY
+    end
+
+    it "flags a day-sized step added to a clock value held in a let" do
+      expect_offense(<<~RUBY)
+        describe "Sessions" do
+          let(:start) { Time.current }
+
+          it "lists them", :open_day do
+            create(:occurrence, starts_at: start + 2.days)
+                                           ^^^^^^^^^^^^^^ #{message}
+          end
+        end
+      RUBY
+    end
+
+    it "ignores an hour offset added to a clock value held in a let" do
+      expect_no_offenses(<<~RUBY)
+        describe "Sessions" do
+          let(:start) { Time.current }
+
+          it "lists them", :open_day do
+            create(:occurrence, starts_at: start + 2.hours)
           end
         end
       RUBY

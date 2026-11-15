@@ -11,15 +11,30 @@ module RuboCop
 
         private
 
-        # The definition of each `let` or local variable the value names, one level deep.
-        def followed_values(value, node)
-          value.each_node(:lvar, :send).filter_map do |name|
-            if name.lvar_type?
-              local_value(name.children.first, node)
-            elsif name.receiver.nil? && name.arguments.empty?
-              let_value(name.method_name, node)
-            end
+        # Each name in the value mapped to the definition of the `let` or local variable it names, one level
+        # deep. The checks read a name as its definition, so `today + 2` with `today = Date.current` is one
+        # expression.
+        def definitions_for(value, node)
+          names = value.each_node(:lvar, :send).to_a
+          names.to_h { |name| [name, definition_of(name, node)] }.compact
+        end
+
+        def definition_of(name, node)
+          if name.lvar_type?
+            local_value(name.children.first, node)
+          elsif name.receiver.nil? && name.arguments.empty?
+            let_value(name.method_name, node)
           end
+        end
+
+        def expand(node)
+          (@definitions || {}).fetch(node, node)
+        end
+
+        # Every call in the expression and in the definition of each name it holds.
+        def calls_of(expression)
+          names = expression.each_node(:lvar, :send).filter_map { |name| (@definitions || {})[name] }
+          [expression, *names].flat_map { |part| part.each_node(:send, :csend).to_a }
         end
 
         # Only a local the call can see: one assigned directly in an enclosing block, never one a parameter

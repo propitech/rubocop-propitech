@@ -97,6 +97,7 @@ module RuboCop
 
         def on_new_investigation
           @now_from_clock = nil
+          @definitions = nil
         end
 
         def on_send(node)
@@ -112,11 +113,17 @@ module RuboCop
 
         private
 
-        # The value itself, plus the definition of each `let` or local variable it names (one level).
+        # One expression: the value with each `let` or local variable it names read as its definition (one level).
         def offending?(value, node, whole_days_only)
-          [value, *followed_values(value, node)].any? do |expression|
-            whole_days_only ? whole_days?(expression) : clock_relative?(expression)
-          end
+          @definitions = definitions_for(value, node)
+          calls = calls_of(value)
+          return false if open_day_helper_used?(calls)
+
+          calls.any? { |call| whole_days_only ? whole_days_step?(call) : clock_read_step?(call) }
+        end
+
+        def clock_read_step?(call)
+          duration_read?(call) || clock_call?(call)
         end
 
         def session_factory?(node)
@@ -132,13 +139,6 @@ module RuboCop
               pair.value if pair.key.sym_type? && TIME_KEYS.include?(pair.key.value)
             end
           end
-        end
-
-        def clock_relative?(value)
-          calls = value.each_node(:send, :csend).to_a
-          return false if open_day_helper_used?(calls)
-
-          calls.any? { |call| duration_read?(call) || clock_call?(call) }
         end
 
         def open_day_helper_used?(calls)

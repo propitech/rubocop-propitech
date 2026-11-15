@@ -26,13 +26,6 @@ module RuboCop
 
         private
 
-        def whole_days?(value)
-          calls = value.each_node(:send, :csend).to_a
-          return false if open_day_helper_used?(calls)
-
-          calls.any? { |call| whole_days_step?(call) }
-        end
-
         def whole_days_step?(call)
           return day_duration?(call.receiver) if duration_read?(call)
           return true if date_shift?(call) || (call.method?(:yesterday) && call.receiver.nil?)
@@ -44,7 +37,7 @@ module RuboCop
         def day_arithmetic?(call)
           return false unless ARITHMETIC.include?(call.method_name)
 
-          day_step_on_clock?(call) || (date_read?(call.receiver) && whole_integer?(call.first_argument))
+          day_step_on_clock?(call) || (date_read?(expand(call.receiver)) && whole_integer?(expand(call.first_argument)))
         end
 
         def day_step_on_clock?(call)
@@ -55,6 +48,7 @@ module RuboCop
         end
 
         def day_duration?(node)
+          node = expand(node) if node
           return false unless node&.call_type? && DAY_UNITS.include?(node.method_name) && node.receiver
 
           !zero?(node.receiver)
@@ -69,7 +63,7 @@ module RuboCop
         end
 
         def clock_expression?(node)
-          node.each_node(:send, :csend).any? { |call| duration_read?(call) || clock_call?(call) }
+          calls_of(node).any? { |call| duration_read?(call) || clock_call?(call) }
         end
       end
     end
