@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+## [0.11.1]
+
+- Teach `Propitech/SessionAtClockRelativeTime` to read `:open_day` as covering
+  today only. Inside an example or group tagged `:open_day`, an hour or minute
+  offset stays allowed, but a whole number of days (`2.days.from_now`,
+  `Time.current + 1.week`, `Date.tomorrow`, `Time.current.tomorrow`,
+  `Date.current + 2`) is now reported. `0.days` is not a step.
+- Teach the cop to follow a `let(:name) { ... }` of the same file and a local
+  variable assigned in the same block into `starts_at:` or `ends_at:`, one
+  level deep, and to read a bare `now` as the clock where the file defines it
+  from the clock (`let(:now) { Time.current }`). It reports once, on the value
+  in the factory call.
+
 ## [0.11.0]
 
 - Add `Propitech/SessionAtClockRelativeTime`, shipping disabled with
