@@ -352,17 +352,34 @@ these appears:
   counts from the given time and is left alone);
 - `Time`, `DateTime` or `Date` read with `current`, `now`, `today`,
   `yesterday` or `tomorrow`, and `Time.zone.now` or `Time.zone.today`;
-- a bare `yesterday`.
+- a bare `yesterday`;
+- a bare `now`, where the file defines it from the clock, as
+  `let(:now) { Time.current }` or `def now = Time.current`. A `now` built
+  from an open-day helper or a fixed date does not count.
 
 Arithmetic on such a form (`Time.current + 1.hour`, `Date.current - 1`) is
-reported too. The cop leaves a call inside an example or group tagged
-`:open_day` (bare, or as `open_day: true`), a call inside a `travel_to` block,
-and a value that uses `open_days_from_now`, `open_days_ago`,
-`open_day_on_or_after`, `open_day_on_or_before` or `open_day_noon`.
+reported too. The cop leaves a call inside a `travel_to` block and a value that
+uses `open_days_from_now`, `open_days_ago`, `open_day_on_or_after`,
+`open_day_on_or_before` or `open_day_noon`.
 
-The cop reads one expression at a time. It does not follow a local variable, a
-`let` name or a method call: `starts_at: start` after `start = 2.hours.ago` is
-not reported, and neither is a factory called through a helper method.
+An example or group tagged `:open_day` (bare, or as `open_day: true`) makes
+only today an open day. Inside one, an hour or minute offset
+(`2.hours.from_now`) is left alone, but a whole number of days is still
+reported:
+
+- `N.day`, `N.days`, `N.week` or `N.weeks` (not `0`) with `ago`, `from_now`,
+  `since` or `until`, or added to or taken from a clock read
+  (`Time.current + 2.days`); a `.change(hour:)`, `.noon` or `.beginning_of_day`
+  on it still counts;
+- `Date.tomorrow`, `Date.yesterday` and `Time.current.tomorrow`;
+- `Date.current` plus or minus an integer.
+
+The cop follows a `let(:name) { ... }` of the same file (the nearest enclosing
+group that defines it) and a local variable assigned earlier in the same block
+into `starts_at:` or `ends_at:`, one level deep: `starts_at: start` after
+`start = 2.hours.ago` is reported, once, on the value in the factory call. A
+name inside that definition is not followed, and neither is a method call, so a
+factory called through a helper method is not reported.
 
 `Factories` defaults to `occurrence`. The cop ships disabled with
 `Include: spec/**/*`; an app enables it.
@@ -378,6 +395,11 @@ Propitech/SessionAtClockRelativeTime:
 # bad
 create(:occurrence, starts_at: 2.hours.from_now)
 create(:occurrence, starts_at: Date.yesterday.noon)
+let(:session_start) { 2.hours.from_now }
+create(:occurrence, starts_at: session_start)
+it "lists them", :open_day do
+  create(:occurrence, starts_at: 2.days.from_now)
+end
 
 # good
 create(:occurrence, starts_at: open_days_from_now(2))
